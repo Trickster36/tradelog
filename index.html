@@ -871,7 +871,7 @@ function renderDash() {
   const ps = document.getElementById('pending-section');
   if (pending.length > 0) {
     ps.style.display = 'block';
-    document.getElementById('pending-count').textContent = pending.length + '/3';
+    document.getElementById('pending-count').textContent = pending.length + '/4';
     document.getElementById('pending-list').innerHTML = pending.map(p => {
       const dirClass = p.trend === 'up' ? 'pd-long' : p.trend === 'down' ? 'pd-short' : 'pd-unknown';
       const dirText  = p.trend === 'up' ? '↑' : p.trend === 'down' ? '↓' : '?';
