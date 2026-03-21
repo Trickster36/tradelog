@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2F4156">
+<title>TradeLog</title>
+<link rel="manifest" href="./manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:     #2F4156;
+  --navy-dk:  #243347;
+  --teal:     #567C8D;
+  --teal-lt:  #6E94A6;
+  --sky:      #C8D9E6;
+  --sky-lt:   #E0ECF4;
+  --beige:    #F5EFEB;
+  --beige-dk: #EDE5DF;
+  --white:    #FFFFFF;
+  --text:     #2F4156;
+  --text2:    #567C8D;
+  --text3:    #8FAABB;
+  --border:   #D6E4EE;
+  --border2:  #C8D9E6;
+  --green:    #2E7D5E;
+  --green-bg: #E8F5EE;
+  --red:      #C0392B;
+  --red-bg:   #FDECEA;
+  --gold:     #B8860B;
+  --gold-bg:  #FEF9E7;
+  --orange:   #C96A10;
+  --orange-bg:#FEF0E4;
+  --shadow:   0 1px 4px rgba(47,65,86,0.08), 0 1px 2px rgba(47,65,86,0.05);
+  --shadow2:  0 4px 16px rgba(47,65,86,0.12);
+  --sans:     'DM Sans', sans-serif;
+  --mono:     'DM Mono', monospace;
+  --nav-h:    68px;
+  --radius:   14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--beige);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.5;overflow:hidden}
+
+/* ── PAGES ── */
+.page{position:fixed;inset:0;bottom:var(--nav-h);overflow-y:auto;overflow-x:hidden;background:var(--beige);opacity:0;pointer-events:none;transform:translateY(10px);transition:opacity .2s ease,transform .2s ease;-webkit-overflow-scrolling:touch}
+.page.active{opacity:1;pointer-events:all;transform:translateY(0)}
+.page-inner{padding:16px 16px 28px;max-width:600px;margin:0 auto}
+
+/* ── NAV ── */
+nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--navy);display:flex;z-index:100;box-shadow:0 -1px 0 rgba(255,255,255,0.06)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:none;color:rgba(200,217,230,0.45);cursor:pointer;transition:color .15s;padding:8px 0;overflow:visible}
+.nav-btn svg{width:22px;height:22px;flex-shrink:0}
+.nav-label{font-size:10px;font-weight:500;letter-spacing:.4px}
+.nav-btn.active{color:var(--sky)}
+.nav-btn.active .nav-label{color:var(--sky)}
+.nav-log-wrap{width:50px;height:50px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:-18px;box-shadow:0 4px 14px rgba(86,124,141,.5);transition:transform .15s,background .15s}
+.nav-btn.nav-log{overflow:visible}
+.nav-btn.nav-log.active .nav-log-wrap,.nav-btn.nav-log:active .nav-log-wrap{transform:scale(.93);background:var(--teal-lt)}
+
+/* ── SHARED ── */
+.section-label{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--text2);margin-bottom:10px}
+
+/* ── DASHBOARD ── */
+.dash-top{padding:22px 0 18px;display:flex;justify-content:space-between;align-items:flex-start}
+.dash-title{font-size:24px;font-weight:700;color:var(--navy)}
+.dash-sub{font-size:13px;color:var(--text2);margin-top:2px}
+.dash-date{font-family:var(--mono);font-size:11px;color:var(--teal);text-align:right;margin-top:4px;font-weight:500}
+
+.hero-stats{background:var(--navy);border-radius:var(--radius);padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;box-shadow:var(--shadow2)}
+.hero-stat-label{font-size:10px;font-weight:600;color:#A8C4D4;letter-spacing:.8px;margin-bottom:5px}
+.hero-stat-val{font-family:var(--mono);font-size:28px;line-height:1;color:#EEF4F8}
+.hero-stat-val.teal{color:#B8D4E8}
+.hero-stat-sub{font-size:11px;color:#7FA4BC;margin-top:3px;font-family:var(--mono)}
+
+.sec-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.sec-stat{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:12px 14px}
+.sec-label{font-size:10px;font-weight:500;color:var(--text2);margin-bottom:4px}
+.sec-val{font-family:var(--mono);font-size:16px;color:var(--navy)}
+
+.equity-wrap{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:16px;margin-bottom:12px}
+#equityCanvas{width:100%;height:100px;display:block}
+
+/* ── PENDING TRADES ── */
+.pending-wrap{background:var(--white);border-radius:var(--radius);border:1.5px solid var(--orange);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
+.pending-header{padding:12px 16px;background:var(--orange-bg);border-bottom:1px solid #F5D5B8;display:flex;align-items:center;gap:8px}
+.pending-dot{width:8px;height:8px;border-radius:50%;background:var(--orange);animation:blink 1.5s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.pending-title{font-size:12px;font-weight:700;color:var(--orange);letter-spacing:.5px;text-transform:uppercase;flex:1}
+.pending-count{font-family:var(--mono);font-size:11px;color:var(--orange);opacity:.7}
+
+.pending-card{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .12s}
+.pending-card:last-child{border-bottom:none}
+.pending-card:active{background:var(--beige)}
+.pending-dir{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.pd-long{background:var(--green-bg);color:var(--green)}
+.pd-short{background:var(--red-bg);color:var(--red)}
+.pd-unknown{background:var(--sky-lt);color:var(--text2)}
+.pending-info{flex:1;min-width:0}
+.pending-pair{font-size:14px;font-weight:700;color:var(--navy)}
+.pending-next{font-size:11px;color:var(--orange);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pending-steps{font-size:10px;color:var(--text3);margin-top:1px}
+.pending-clear{background:none;border:1.5px solid var(--border2);border-radius:8px;color:var(--text3);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;flex-shrink:0;transition:all .12s;white-space:nowrap}
+.pending-clear:active{border-color:var(--red);color:var(--red)}
+
+/* ── RUNNING TRADES ── */
+.running-wrap{background:var(--white);border-radius:var(--radius);border:1.5px solid var(--green);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
+.running-header{padding:10px 16px;background:var(--green-bg);border-bottom:1px solid #C3E8D5;display:flex;align-items:center;gap:8px}
+.running-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:blink 1.5s ease-in-out infinite}
+.running-title{font-size:12px;font-weight:700;color:var(--green);letter-spacing:.5px;text-transform:uppercase;flex:1}
+.running-count{font-family:var(--mono);font-size:11px;color:var(--green);opacity:.7}
+.running-card{padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+.running-card:last-child{border-bottom:none}
+.running-card:active{background:var(--beige)}
+.running-card-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.running-dir{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.rd-buy{background:var(--green-bg);color:var(--green)}
+.rd-sell{background:var(--red-bg);color:var(--red)}
+.rd-unknown{background:var(--sky-lt);color:var(--text2)}
+.running-pair{font-size:14px;font-weight:700;color:var(--navy);flex:1}
+.running-time{font-size:10px;color:var(--text3)}
+.running-partial-tag{font-size:10px;font-weight:600;color:var(--gold);background:var(--gold-bg);padding:2px 8px;border-radius:20px}
+.running-prices{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px}
+.rp-item{background:var(--beige);border-radius:8px;padding:6px 8px}
+.rp-lbl{font-size:9px;font-weight:600;color:var(--text3);letter-spacing:.5px;margin-bottom:2px}
+.rp-val{font-family:var(--mono);font-size:12px;color:var(--navy);font-weight:500}
+.running-rr{font-size:11px;color:var(--text2)}
+.running-rr span{font-family:var(--mono);color:var(--teal);font-weight:600}
+.running-actions{display:flex;gap:8px;margin-top:8px}
+.running-btn{flex:1;padding:7px;border-radius:8px;border:none;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;transition:all .12s}
+.rb-result{background:var(--navy);color:#fff}
+.rb-result:active{background:var(--teal)}
+.rb-clear{background:none;border:1.5px solid var(--border2);color:var(--text3)}
+.rb-clear:active{border-color:var(--red);color:var(--red)}
+
+/* ── GRADE BREAKDOWN ── */
+.grade-wrap{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:16px;margin-bottom:12px}
+.grade-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)}
+.grade-row:last-child{border-bottom:none;padding-bottom:0}
+.grade-row:first-child{padding-top:0}
+.grade-badge{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.g-A{background:var(--green-bg);color:var(--green)}
+.g-B{background:var(--gold-bg);color:var(--gold)}
+.g-C{background:var(--red-bg);color:var(--red)}
+.grade-info{flex:1}
+.grade-name{font-size:13px;font-weight:600;color:var(--navy)}
+.grade-sub{font-size:11px;color:var(--text3)}
+.grade-wr{font-family:var(--mono);font-size:15px;font-weight:500}
+
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.quick-btn{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform .12s,box-shadow .12s;text-align:left}
+.quick-btn:active{transform:scale(.97);box-shadow:none}
+.quick-icon{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qi-teal{background:var(--teal)}
+.qi-navy{background:var(--navy)}
+.quick-title{font-size:13px;font-weight:600;color:var(--navy)}
+.quick-sub{font-size:11px;color:var(--text2);margin-top:2px}
+
+/* ── LOG TRADE ── */
+.log-top{padding:22px 0 18px}
+.log-title{font-size:24px;font-weight:700;color:var(--navy)}
+.log-sub{font-size:13px;color:var(--text2);margin-top:2px}
+
+/* Editing pending banner */
+.editing-banner{background:var(--orange-bg);border:1.5px solid var(--orange);border-radius:var(--radius);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.editing-banner svg{flex-shrink:0}
+.editing-banner-text{font-size:13px;color:var(--orange);font-weight:600}
+.editing-banner-sub{font-size:11px;color:var(--orange);opacity:.7;margin-top:1px}
+
+.step-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:8px;overflow:hidden}
+.step-head{padding:10px 14px;background:var(--navy);display:flex;align-items:center;gap:10px}
+.step-num{width:24px;height:24px;border-radius:50%;background:rgba(200,217,230,.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--sky);flex-shrink:0}
+.step-title{font-size:13px;font-weight:600;color:#fff}
+.step-subtitle{font-size:11px;color:rgba(200,217,230,.5);margin-top:1px}
+.step-done{margin-left:auto;font-size:10px;font-weight:700;color:var(--green);background:var(--green-bg);padding:3px 8px;border-radius:20px}
+.step-body{padding:12px 14px 14px}
+
+.field-lbl{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.5px;display:block;margin-bottom:6px}
+.tog-group{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.step-body .tog-group:last-child{margin-bottom:0}
+.tog{flex:1;min-width:72px;padding:9px 12px;border-radius:9px;border:1.5px solid var(--border);background:var(--beige);color:var(--text2);font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all .12s;text-align:center;white-space:nowrap}
+.tog:active{transform:scale(.95)}
+.tog.s-teal {background:#EEF5F8;border-color:var(--teal);color:var(--teal)}
+.tog.s-navy {background:#E8EDF2;border-color:var(--navy);color:var(--navy)}
+.tog.s-green{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.tog.s-red  {background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.tog.s-gold {background:var(--gold-bg);border-color:var(--gold);color:var(--gold)}
+
+.t-input,.t-select{width:100%;padding:11px 14px;border-radius:9px;border:1.5px solid var(--border);background:var(--beige);color:var(--text);font-family:var(--sans);font-size:14px;outline:none;transition:border-color .15s;margin-bottom:14px;-webkit-appearance:none}
+.t-input:focus,.t-select:focus{border-color:var(--teal);background:var(--white)}
+.inp-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.inp-wrap label{font-size:10px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px}
+.inp-wrap .t-input{margin-bottom:0}
+
+.grade-preview{display:flex;align-items:center;gap:12px;background:var(--beige);border-radius:10px;padding:13px 16px;margin-bottom:14px;border:1.5px solid var(--border)}
+.grade-preview-badge{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;flex-shrink:0}
+.grade-preview-label{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:2px}
+.grade-preview-desc{font-size:13px;color:var(--text)}
+
+/* Save buttons row */
+.save-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.save-btn{width:100%;padding:15px;background:var(--navy);color:#fff;border:none;border-radius:var(--radius);font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;transition:background .15s,transform .1s;letter-spacing:.3px}
+.save-btn:hover{background:var(--teal)}
+.save-btn:active{transform:scale(.99)}
+.save-pending-btn{width:100%;padding:15px;background:var(--white);color:var(--orange);border:1.5px solid var(--orange);border-radius:var(--radius);font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;transition:background .15s,transform .1s;letter-spacing:.3px}
+.save-pending-btn:active{background:var(--orange-bg);transform:scale(.99)}
+
+/* ── HISTORY ── */
+.hist-top{padding:22px 0 18px;display:flex;justify-content:space-between;align-items:center}
+.hist-title{font-size:24px;font-weight:700;color:var(--navy)}
+.hist-actions{display:flex;gap:8px;align-items:center}
+.export-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;background:var(--teal);color:#fff;border:none;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;transition:background .15s,transform .1s}
+.export-btn:active{background:var(--navy);transform:scale(.97)}
+.clear-btn{padding:7px 14px;border-radius:8px;border:1.5px solid var(--border2);background:none;color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;transition:all .12s}
+.clear-btn:active{border-color:var(--red);color:var(--red)}
+
+.fail-wrap{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:16px;margin-bottom:12px}
+.fail-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.fail-row:last-child{border-bottom:none;padding-bottom:0}
+.fail-row:first-child{padding-top:0}
+.fail-name{flex:1;font-size:13px;color:var(--navy)}
+.fail-bar-bg{width:70px;height:5px;background:var(--sky-lt);border-radius:3px;overflow:hidden}
+.fail-bar{height:100%;background:var(--red);border-radius:3px;transition:width .4s ease}
+.fail-count{font-family:var(--mono);font-size:12px;color:var(--red);width:24px;text-align:right}
+
+.filter-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.chip{padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;transition:all .12s}
+.chip.active{background:var(--navy);border-color:var(--navy);color:#fff}
+
+.trade-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.tc-top{padding:13px 14px;display:flex;align-items:center;justify-content:space-between}
+.tc-left{display:flex;align-items:center;gap:10px}
+.tc-dir{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0}
+.d-long{background:var(--green-bg);color:var(--green)}
+.d-short{background:var(--red-bg);color:var(--red)}
+.tc-pair{font-size:15px;font-weight:700;color:var(--navy)}
+.tc-date{font-size:11px;color:var(--teal);margin-top:1px;font-weight:500}
+.tc-right{display:flex;align-items:center;gap:8px}
+.pill{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.p-win{background:var(--green-bg);color:var(--green)}
+.p-loss{background:var(--red-bg);color:var(--red)}
+.p-partial{background:var(--gold-bg);color:var(--gold)}
+.tc-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:17px;padding:2px 4px;transition:color .12s}
+.tc-del:active{color:var(--red)}
+.tc-mid{padding:0 14px 13px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tc-stat-lbl{font-size:10px;color:var(--text3);margin-bottom:2px}
+.tc-stat-val{font-family:var(--mono);font-size:13px;color:var(--navy)}
+.tc-bot{padding:9px 14px;background:var(--beige);border-top:1px solid var(--border);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.tag{padding:3px 8px;border-radius:6px;font-size:10px;font-weight:600}
+.t-gA{background:var(--green-bg);color:var(--green)}
+.t-gB{background:var(--gold-bg);color:var(--gold)}
+.t-gC{background:var(--red-bg);color:var(--red)}
+.t-SD{background:#EEF5F8;color:var(--teal)}
+.t-SR{background:var(--sky-lt);color:var(--text2)}
+.t-fail{background:var(--red-bg);color:var(--red)}
+.tc-notes{font-size:11px;color:var(--text2);flex:1;font-style:italic}
+
+.google-btn{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:9px;background:var(--white);color:var(--navy);border:1.5px solid var(--border);font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;box-shadow:var(--shadow)}
+.google-btn:active{transform:scale(.97)}
+.google-btn.signed-in{border-color:var(--green);color:var(--green)}
+.empty-state{text-align:center;padding:40px 20px}
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 0 4px;gap:8px}
+.pg-btn{flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--white);color:var(--navy);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;transition:all .12s}
+.pg-btn:disabled{opacity:.35;cursor:default}
+.pg-btn:not(:disabled):active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.pg-info{font-family:var(--mono);font-size:12px;color:var(--text2);text-align:center;white-space:nowrap}
+.empty-icon{font-size:36px;margin-bottom:12px;opacity:.35}
+.empty-text{font-size:14px;color:var(--text2)}
+</style>
+</head>
+<body>
+
+<!-- ══════════ PAGE 1: DASHBOARD ══════════ -->
+<div class="page active" id="page-dashboard">
+<div class="page-inner">
+
+  <div class="dash-top">
+    <div><div class="dash-title">Dashboard</div><div class="dash-sub">Strategy performance overview</div></div>
+    <div style="text-align:right">
+      <button class="google-btn" id="google-btn" onclick="handleGoogleAuth()">
+        <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        <span id="google-btn-text">Sign in</span>
+      </button>
+      <div class="dash-date" id="dash-date" style="margin-top:5px"></div>
+      <div id="sync-status" style="font-size:10px;margin-top:3px;font-family:var(--mono);transition:color 0.3s"></div>
+    </div>
+  </div>
+
+  <!-- Pending Trades -->
+  <div id="pending-section" style="display:none">
+    <div class="section-label">Pending Trades</div>
+    <div class="pending-wrap">
+      <div class="pending-header">
+        <div class="pending-dot"></div>
+        <div class="pending-title">Active Setups</div>
+        <div class="pending-count" id="pending-count"></div>
+      </div>
+      <div id="pending-list"></div>
+    </div>
+  </div>
+
+  <!-- Running Trades -->
+  <div id="running-section" style="display:none">
+    <div class="section-label">Running Trades</div>
+    <div class="running-wrap">
+      <div class="running-header">
+        <div class="running-dot"></div>
+        <div class="running-title">Live in Market</div>
+        <div class="running-count" id="running-count"></div>
+      </div>
+      <div id="running-list"></div>
+    </div>
+  </div>
+
+  <!-- Hero stats -->
+  <div class="hero-stats">
+    <div><div class="hero-stat-label">WIN RATE</div><div class="hero-stat-val teal" id="d-wr">—</div><div class="hero-stat-sub" id="d-wl">0W · 0L</div></div>
+    <div><div class="hero-stat-label">PROFIT FACTOR</div><div class="hero-stat-val" id="d-pf">—</div><div class="hero-stat-sub">gross W / gross L</div></div>
+    <div><div class="hero-stat-label">AVG R:R</div><div class="hero-stat-val teal" id="d-rr">—</div><div class="hero-stat-sub">reward per risk</div></div>
+    <div><div class="hero-stat-label">EXPECTANCY</div><div class="hero-stat-val" id="d-exp">—</div><div class="hero-stat-sub">per 1R risked</div></div>
+  </div>
+
+  <div class="sec-stats">
+    <div class="sec-stat"><div class="sec-label">Total Trades</div><div class="sec-val" id="d-total">0</div></div>
+    <div class="sec-stat"><div class="sec-label">Net R</div><div class="sec-val" id="d-netr">0R</div></div>
+    <div class="sec-stat"><div class="sec-label">Max Drawdown</div><div class="sec-val" id="d-dd">0R</div></div>
+  </div>
+
+  <div class="equity-wrap">
+    <div class="section-label" style="margin-bottom:12px">Equity Curve</div>
+    <canvas id="equityCanvas" height="100"></canvas>
+  </div>
+
+  <div class="grade-wrap">
+    <div class="section-label" style="margin-bottom:12px">Grade Breakdown</div>
+    <div class="grade-row">
+      <div class="grade-badge g-A">A</div>
+      <div class="grade-info"><div class="grade-name">High Quality</div><div class="grade-sub" id="ga-sub">0 trades</div></div>
+      <div class="grade-wr" id="ga-wr" style="color:var(--green)">—</div>
+    </div>
+    <div class="grade-row">
+      <div class="grade-badge g-B">B</div>
+      <div class="grade-info"><div class="grade-name">Acceptable</div><div class="grade-sub" id="gb-sub">0 trades</div></div>
+      <div class="grade-wr" id="gb-wr" style="color:var(--gold)">—</div>
+    </div>
+    <div class="grade-row">
+      <div class="grade-badge g-C">C</div>
+      <div class="grade-info"><div class="grade-name">Poor Quality</div><div class="grade-sub" id="gc-sub">0 trades</div></div>
+      <div class="grade-wr" id="gc-wr" style="color:var(--red)">—</div>
+    </div>
+  </div>
+
+  <div class="section-label">Quick Access</div>
+  <div class="quick-grid">
+    <button class="quick-btn" onclick="goTo('log')">
+      <div class="quick-icon qi-teal"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="20" height="20"><path d="M12 5v14M5 12h14"/></svg></div>
+      <div><div class="quick-title">Log Trade</div><div class="quick-sub">Add new setup</div></div>
+    </button>
+    <button class="quick-btn" onclick="goTo('history')">
+      <div class="quick-icon qi-navy"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="20" height="20"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg></div>
+      <div><div class="quick-title">Trade History</div><div class="quick-sub">View all trades</div></div>
+    </button>
+  </div>
+
+</div>
+</div>
+
+<!-- ══════════ PAGE 2: LOG TRADE ══════════ -->
+<div class="page" id="page-log">
+<div class="page-inner">
+
+  <div class="log-top">
+    <div class="log-title" id="log-page-title">Log Trade</div>
+    <div class="log-sub" id="log-page-sub">Follow your strategy checklist</div>
+  </div>
+
+  <!-- Editing pending banner -->
+  <div class="editing-banner" id="editing-banner" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#C96A10" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+    <div>
+      <div class="editing-banner-text">Continuing Pending Trade</div>
+      <div class="editing-banner-sub" id="editing-banner-sub">Fill in the remaining steps</div>
+    </div>
+  </div>
+
+  <!-- Step 1 — Pair -->
+  <div class="step-card">
+    <div class="step-head">
+      <div class="step-num">1</div>
+      <div><div class="step-title">Instrument</div><div class="step-subtitle">Select pair</div></div>
+      <div class="step-done" id="step1-done" style="display:none">✓ Done</div>
+    </div>
+    <div class="step-body">
+      <label class="field-lbl">Pair</label>
+      <select class="t-select" id="f-pair">
+        <option value="">— Select pair —</option>
+        <option value="EURUSD">EUR/USD</option>
+        <option value="GBPUSD">GBP/USD</option>
+        <option value="USDJPY">USD/JPY</option>
+        <option value="AUDUSD">AUD/USD</option>
+        <option value="XAUUSD">XAU/USD</option>
+        <option value="BTCUSD">BTC/USD</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Step 2 — 4H Context -->
+  <div class="step-card">
+    <div class="step-head">
+      <div class="step-num">2</div>
+      <div><div class="step-title">4H Context</div><div class="step-subtitle">Trend · Phase · POIs</div></div>
+      <div class="step-done" id="step2-done" style="display:none">✓ Done</div>
+    </div>
+    <div class="step-body">
+      <p style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.6">Confirm you have checked each on the 4H chart.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <div class="field-lbl" style="margin-bottom:0;text-align:center">4H Trend</div>
+          <div class="tog" data-g="ctx4h_trend" data-v="checked" data-c="green" style="width:100%;display:flex;align-items:center;justify-content:center">✓ Checked</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <div class="field-lbl" style="margin-bottom:0;text-align:center">4H Phase</div>
+          <div class="tog" data-g="ctx4h_phase" data-v="checked" data-c="green" style="width:100%;display:flex;align-items:center;justify-content:center">✓ Checked</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <div class="field-lbl" style="margin-bottom:0;text-align:center">4H POIs</div>
+          <div class="tog" data-g="ctx4h_pois" data-v="checked" data-c="green" style="width:100%;display:flex;align-items:center;justify-content:center">✓ Checked</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3 — CRT Rules -->
+  <div class="step-card">
+    <div class="step-head">
+      <div class="step-num">3</div>
+      <div><div class="step-title">CRT Rules</div><div class="step-subtitle">Setup type</div></div>
+      <div class="step-done" id="step3-done" style="display:none">✓ Done</div>
+    </div>
+    <div class="step-body">
+      <label class="field-lbl">CRT Type</label>
+      <div class="tog-group">
+        <div class="tog" data-g="crt" data-v="pivot"       data-c="teal">Pivot</div>
+        <div class="tog" data-g="crt" data-v="continuation" data-c="navy">Continuation</div>
+        <div class="tog" data-g="crt" data-v="midleg"       data-c="gold">Mid Reversal</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4 — 15M Context -->
+  <div class="step-card">
+    <div class="step-head">
+      <div class="step-num">4</div>
+      <div><div class="step-title">15M Context</div><div class="step-subtitle">Structure · POI type</div></div>
+      <div class="step-done" id="step4-done" style="display:none">✓ Done</div>
+    </div>
+    <div class="step-body">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <span style="font-size:13px;font-weight:600;color:var(--text)">15M Structure</span>
+        <div class="tog" data-g="structure" data-v="marked" data-c="green" style="flex:none;padding:8px 18px;margin-bottom:0">✓ Marked</div>
+      </div>
+      <label class="field-lbl">POI Type</label>
+      <div class="tog-group">
+        <div class="tog" data-g="poitype" data-v="BoS" data-c="teal">BoS</div>
+        <div class="tog" data-g="poitype" data-v="SR"  data-c="navy">S/R</div>
+        <div class="tog" data-g="poitype" data-v="SD"  data-c="gold">S/D</div>
+      </div>
+      <label class="field-lbl">POI Freshness</label>
+      <div class="tog-group">
+        <div class="tog" data-g="poi" data-v="fresh"      data-c="green">Fresh — Never Tested</div>
+        <div class="tog" data-g="poi" data-v="tested-bos" data-c="teal">Tested + BOS Followed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 5 — POI Refinement -->
+  <div class="step-card">
+    <div class="step-head">
+      <div class="step-num">5</div>
+      <div><div class="step-title">POI Refinement</div><div class="step-subtitle">5M S/R Zone inside POI</div></div>
+      <div class="step-done" id="step5-done" style="display:none">✓ Done</div>
+    </div>
+    <div class="step-body">
+      <label class="field-lbl">5M S/R? <span style="color:var(--text3);font-weight:400">(tighter SL if exists)</span></label>
+      <div class="tog-group">
+        <div class="tog" data-g="refine" data-v="exists" data-c="green">✓ Exists</div>
+        <div class="tog" data-g="refine" data-v="none"   data-c="red">✗ None</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 6 — 5M Confirmation -->
+  <div class="step-card">
+    <div class="step-head">
+      <div class="step-num">6</div>
+      <div><div class="step-title">5M Confirmation</div><div class="step-subtitle">Engulfing candle quality</div></div>
+      <div class="step-done" id="step6-done" style="display:none">✓ Done</div>
+    </div>
+    <div class="step-body">
+      <p style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.6">
+        <strong style="color:var(--green)">Strong</strong> — Fully Engulfed.<br>
+        <strong style="color:var(--teal)">Acceptable</strong> — Almost Engulfed.<br>
+        <strong style="color:var(--red)">Poor</strong> — No Engulfing.
+      </p>
+      <div class="tog-group">
+        <div class="tog" data-g="engulf" data-v="strong"     data-c="green">Strong</div>
+        <div class="tog" data-g="engulf" data-v="acceptable" data-c="teal">Acceptable</div>
+        <div class="tog" data-g="engulf" data-v="poor"       data-c="red">Poor</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 7 — Trade Management -->
+  <div class="step-card">
+    <div class="step-head">
+      <div class="step-num">7</div>
+      <div><div class="step-title">Trade Management</div><div class="step-subtitle">Entry · SL · TP · SL type</div></div>
+      <div class="step-done" id="step7-done" style="display:none">✓ Done</div>
+    </div>
+    <div class="step-body">
+      <div class="inp-row">
+        <div class="inp-wrap"><label>ENTRY</label><input class="t-input" id="f-entry" type="number" placeholder="1.15200" step="0.00001"></div>
+        <div class="inp-wrap"><label>STOP LOSS</label><input class="t-input" id="f-sl" type="number" placeholder="1.14900" step="0.00001"></div>
+        <div class="inp-wrap"><label>TAKE PROFIT</label><input class="t-input" id="f-tp" type="number" placeholder="1.15800" step="0.00001"></div>
+      </div>
+      <label class="field-lbl">SL Placed At</label>
+      <div class="tog-group">
+        <div class="tog" data-g="sltype" data-v="5M Zone" data-c="teal">5M Refined Zone</div>
+        <div class="tog" data-g="sltype" data-v="15M POI" data-c="navy">15M POI</div>
+      </div>
+      <label class="field-lbl">Direction</label>
+      <div class="tog-group">
+        <div class="tog" data-g="direction" data-v="buy"  data-c="green">↑ Buy</div>
+        <div class="tog" data-g="direction" data-v="sell" data-c="red">↓ Sell</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 8 — Partial -->
+  <div class="step-card">
+    <div class="step-head">
+      <div class="step-num">8</div>
+      <div><div class="step-title">Partial Close</div><div class="step-subtitle">50% at 2R → move SL to BE</div></div>
+      <div class="step-done" id="step8-done" style="display:none">✓ Done</div>
+    </div>
+    <div class="step-body">
+      <label class="field-lbl">Partial at 2R Taken?</label>
+      <div class="tog-group">
+        <div class="tog" data-g="partial" data-v="yes" data-c="green">Yes — 50% closed</div>
+        <div class="tog" data-g="partial" data-v="no"  data-c="red">No</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 9 — Trade Result -->
+  <div class="step-card">
+    <div class="step-head">
+      <div class="step-num">9</div>
+      <div><div class="step-title">Trade Result</div><div class="step-subtitle">Outcome · Failure reason</div></div>
+      <div class="step-done" id="step9-done" style="display:none">✓ Done</div>
+    </div>
+    <div class="step-body">
+      <label class="field-lbl">Outcome</label>
+      <div class="tog-group">
+        <div class="tog" data-g="outcome" data-v="win"     data-c="green">Win ✓</div>
+        <div class="tog" data-g="outcome" data-v="partial" data-c="gold">Partial 2R→BE</div>
+        <div class="tog" data-g="outcome" data-v="loss"    data-c="red">Loss ✗</div>
+      </div>
+      <div id="fail-section" style="display:none">
+        <label class="field-lbl">What Failed?</label>
+        <div class="tog-group" style="flex-wrap:wrap;gap:8px">
+          <div class="tog" data-g="fail" data-v="CRT Failed"          data-c="red"  style="flex:1 1 auto;min-width:0">CRT Failed</div>
+          <div class="tog" data-g="fail" data-v="S/R Invalidated"      data-c="gold" style="flex:1 1 auto;min-width:0">S/R Invalidated</div>
+          <div class="tog" data-g="fail" data-v="S/D Invalidated"      data-c="red"  style="flex:1 1 auto;min-width:0">S/D Invalidated</div>
+          <div class="tog" data-g="fail" data-v="BoS Invalidated"       data-c="red"  style="flex:1 1 auto;min-width:0">BoS Invalidated</div>
+          <div class="tog" data-g="fail" data-v="Liquidity Grab"        data-c="gold" style="flex:1 1 auto;min-width:0">Liquidity Grab</div>
+          <div class="tog" data-g="fail" data-v="Refined Zone Failed"   data-c="gold" style="flex:1 1 auto;min-width:0">Refined Zone Failed</div>
+          <div class="tog" data-g="fail" data-v="Confirmation Failed"   data-c="red"  style="flex:1 1 auto;min-width:0">Confirmation Failed</div>
+          <div class="tog" data-g="fail" data-v="News Spike"            data-c="red"  style="flex:1 1 auto;min-width:0">News Spike</div>
+        </div>
+      </div>
+      <label class="field-lbl">Notes <span style="color:var(--text3);font-weight:400">(optional)</span></label>
+      <input class="t-input" id="f-notes" type="text" placeholder="Any observations...">
+      <div class="grade-preview" id="grade-preview">
+        <div class="grade-preview-badge g-A" id="gp-badge">—</div>
+        <div><div class="grade-preview-label">TRADE GRADE</div><div class="grade-preview-desc" id="gp-desc">Complete checklist to see grade</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save buttons -->
+  <div class="save-row">
+    <button class="save-pending-btn" onclick="savePending()">⏳ Save as Pending</button>
+    <button class="save-btn" onclick="submitTrade()">Save Trade</button>
+  </div>
+  <div style="height:10px"></div>
+
+</div>
+</div>
+
+<!-- ══════════ PAGE 3: HISTORY ══════════ -->
+<div class="page" id="page-history">
+<div class="page-inner">
+
+  <div class="hist-top">
+    <div class="hist-title">History</div>
+    <div class="hist-actions">
+      <button class="export-btn" onclick="exportPDF()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export PDF
+      </button>
+      <button class="clear-btn" onclick="clearAll()">Clear All</button>
+    </div>
+  </div>
+
+  <div class="section-label">Failure Analysis</div>
+  <div class="fail-wrap" id="fail-analysis">
+    <div style="text-align:center;padding:12px;font-size:13px;color:var(--text3)">No loss data yet</div>
+  </div>
+
+  <div class="section-label">Filter</div>
+  <div class="filter-row">
+    <div class="chip active" data-f="all"     onclick="setFilter('all')">All</div>
+    <div class="chip"        data-f="win"     onclick="setFilter('win')">Wins</div>
+    <div class="chip"        data-f="loss"    onclick="setFilter('loss')">Losses</div>
+    <div class="chip"        data-f="partial" onclick="setFilter('partial')">Partial</div>
+    <div class="chip"        data-f="A"       onclick="setFilter('A')">Grade A</div>
+    <div class="chip"        data-f="B"       onclick="setFilter('B')">Grade B</div>
+    <div class="chip"        data-f="C"       onclick="setFilter('C')">Grade C</div>
+  </div>
+
+  <div id="trade-list"></div>
+
+</div>
+</div>
+
+<!-- ══════════ BOTTOM NAV ══════════ -->
+<nav>
+  <button class="nav-btn active" id="nav-dashboard" onclick="goTo('dashboard')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    <span class="nav-label">Dashboard</span>
+  </button>
+  <button class="nav-btn nav-log" id="nav-log" onclick="goTo('log')">
+    <div class="nav-log-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="22" height="22"><path d="M12 5v14M5 12h14"/></svg>
+    </div>
+    <span class="nav-label" style="color:rgba(200,217,230,.4);margin-top:2px">Log</span>
+  </button>
+  <button class="nav-btn" id="nav-history" onclick="goTo('history')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+    <span class="nav-label">History</span>
+  </button>
+</nav>
+
+<!-- Firebase SDKs -->
+<script type="module">
+import { initializeApp }        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInAnonymously, signInWithPopup, linkWithPopup, GoogleAuthProvider, onAuthStateChanged }
+                                 from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getDatabase, ref, set, onValue, remove }
+                                 from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyBpxoCdyU38Sq4-vK1A_W4atQ1AdvrhdoI",
+  authDomain:        "tradelog-42241.firebaseapp.com",
+  databaseURL:       "https://tradelog-42241-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "tradelog-42241",
+  storageBucket:     "tradelog-42241.firebasestorage.app",
+  messagingSenderId: "21674370077",
+  appId:             "1:21674370077:web:27860baa388c6713bb92f4"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getDatabase(app);
+
+// ── STATE ──────────────────────────────────
+let trades  = [];
+let pending = [];
+let sel     = {};
+let editingPendingId = null;
+let curFilter = 'all';
+let curPage    = 1;
+const PER_PAGE = 10;
+let uid = null;  // set after auth
+
+// ── SYNC HELPERS ───────────────────────────
+function saveTrades()  { if (uid) set(ref(db, uid + '/trades'),  trades.length  ? trades  : null); }
+function savePendingDB(){ if (uid) set(ref(db, uid + '/pending'), pending.length ? pending : null); }
+
+// ── SHOW SYNC STATUS ───────────────────────
+function setSyncStatus(msg, color) {
+  let el = document.getElementById('sync-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = color || 'var(--text3)';
+}
+
+// ── NAVIGATION ─────────────────────────────
+function goTo(p, pendingId) {
+  document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  document.getElementById('nav-'  + p).classList.add('active');
+  if (p === 'log') {
+    if (pendingId) {
+      loadPendingIntoForm(pendingId);
+    } else {
+      if (editingPendingId) resetForm(); // clear if coming fresh
+      editingPendingId = null;
+      document.getElementById('editing-banner').style.display = 'none';
+      document.getElementById('log-page-title').textContent = 'Log Trade';
+      document.getElementById('log-page-sub').textContent   = 'Follow your strategy checklist';
+    }
+  }
+  if (p === 'dashboard') renderDash();
+  if (p === 'history')   renderHistory();
+}
+
+// ── PAIR SELECT LISTENER ───────────────────
+document.getElementById('f-pair').addEventListener('change', () => {
+  updateStepDone();
+  updateGrade();
+});
+
+// ── TOGGLES ────────────────────────────────
+// Run after DOM is ready
+document.querySelectorAll('.tog').forEach(el => {
+  el.addEventListener('click', () => {
+    const g = el.dataset.g, c = el.dataset.c;
+    const alreadySelected = el.classList.contains('s-' + c);
+    document.querySelectorAll(`.tog[data-g="${g}"]`).forEach(t => t.className = 'tog');
+    if (alreadySelected) {
+      // Deselect — tap same option again
+      delete sel[g];
+      if (g === 'outcome') {
+        document.getElementById('fail-section').style.display = 'none';
+        delete sel['fail'];
+      }
+    } else {
+      // Select new option
+      el.classList.add('s-' + c);
+      sel[g] = el.dataset.v;
+      if (g === 'outcome') {
+        document.getElementById('fail-section').style.display = el.dataset.v === 'loss' ? 'block' : 'none';
+        if (el.dataset.v !== 'loss') delete sel['fail'];
+      }
+    }
+    updateStepDone();
+    updateGrade();
+  });
+});
+
+// ── STEP DONE INDICATORS ───────────────────
+function updateStepDone() {
+  const s1 = document.getElementById('f-pair') && document.getElementById('f-pair').value !== '';
+  const s2 = sel.ctx4h_trend && sel.ctx4h_phase && sel.ctx4h_pois;
+  const s3 = sel.crt;
+  const s4 = sel.structure && sel.poitype && sel.poi;
+  const s5 = sel.refine;
+  const s6 = sel.engulf;
+  const s7 = sel.sltype;
+  const s8 = sel.partial; // optional — shown if selected
+  const s9 = sel.outcome && (sel.outcome !== 'loss' || sel.fail);
+  document.getElementById('step1-done').style.display = s1 ? 'block' : 'none';
+  document.getElementById('step2-done').style.display = s2 ? 'block' : 'none';
+  document.getElementById('step3-done').style.display = s3 ? 'block' : 'none';
+  document.getElementById('step4-done').style.display = s4 ? 'block' : 'none';
+  document.getElementById('step5-done').style.display = s5 ? 'block' : 'none';
+  document.getElementById('step6-done').style.display = s6 ? 'block' : 'none';
+  document.getElementById('step7-done').style.display = s7 ? 'block' : 'none';
+  document.getElementById('step8-done').style.display = s8 ? 'block' : 'none';
+  document.getElementById('step9-done').style.display = s9 ? 'block' : 'none';
+}
+
+// ── GRADE ──────────────────────────────────
+function calcGrade(s) {
+  let poor = 0;
+  // 4H Context — all three must be checked for A grade
+  if (!s.ctx4h_trend) poor += 0.5;
+  if (!s.ctx4h_phase) poor += 0.5;
+  if (!s.ctx4h_pois)  poor += 0.5;
+  // 15M Context — POI freshness
+  if (s.poi === 'tested-bos') poor += 0.5;
+  // 5M Confirmation — engulf quality
+  if (s.engulf === 'acceptable') poor += 0.5;
+  if (s.engulf === 'poor')       poor++;
+  return poor === 0 ? 'A' : poor <= 1 ? 'B' : 'C';
+}
+
+function updateGrade() {
+  const needed = ['ctx4h_trend','ctx4h_phase','ctx4h_pois','crt','structure','poitype','poi','refine','engulf'];
+  const done   = needed.every(k => sel[k]);
+  const badge  = document.getElementById('gp-badge');
+  const desc   = document.getElementById('gp-desc');
+  if (!done) { badge.textContent='—'; badge.className='grade-preview-badge'; desc.textContent='Complete checklist to see grade'; return; }
+  const g = calcGrade(sel);
+  badge.textContent = g;
+  badge.className   = 'grade-preview-badge g-' + g;
+  desc.innerHTML    = {A:'<strong>A Grade</strong> — High quality, all steps followed',B:'<strong>B Grade</strong> — Acceptable, minor compromise',C:'<strong>C Grade</strong> — Poor quality, 2+ issues'}[g];
+}
+
+// ── NEXT PENDING STEP LABEL ────────────────
+function isRunning(p) {
+  // A trade is running when trade management is complete
+  return !!(p.sltype && p.entry && p.sl && p.tp);
+}
+
+function fmt(price, pair) {
+  if (!price) return '—';
+  if (pair && (pair.includes('JPY') || pair.includes('BTC') || pair.includes('XAU')))
+    return parseFloat(price).toFixed(2);
+  return parseFloat(price).toFixed(5);
+}
+
+function calcRR(entry, sl, tp) {
+  const risk   = Math.abs(entry - sl);
+  const reward = Math.abs(tp - entry);
+  return risk > 0 ? (reward / risk).toFixed(2) : '—';
+}
+
+function getNextStep(p) {
+  if (!p.trend)                                       return 'Waiting: Instrument';
+  if (!p.ctx4h_trend||!p.ctx4h_phase||!p.ctx4h_pois) return 'Waiting: 4H Context';
+  if (!p.crt)                                         return 'Waiting: CRT Rules';
+  if (!p.structure||!p.poitype||!p.poi)               return 'Waiting: 15M Context';
+  if (!p.refine)                                      return 'Waiting: POI Refinement';
+  if (!p.engulf)                                      return 'Waiting: 5M Confirmation';
+  if (!p.sltype || !p.entry || !p.sl || !p.tp)        return 'Waiting: Trade Management';
+  if (!p.outcome)                                     return 'Waiting: Trade Result';
+  return 'Ready to finalise';
+}
+
+function getStepsCount(p) {
+  let done = 0;
+  if (p.trend) done++;
+  if (p.ctx4h_trend && p.ctx4h_phase && p.ctx4h_pois) done++;
+  if (p.crt) done++;
+  if (p.structure && p.poitype && p.poi) done++;
+  if (p.refine) done++;
+  if (p.engulf) done++;
+  if (p.sltype) done++;
+  if (p.partial) done++;
+  if (p.outcome) done++;
+  return done + '/9 steps done';
+}
+
+// ── SAVE AS PENDING ────────────────────────
+function savePending() {
+  const pair = document.getElementById('f-pair').value;
+  if (!pair) { alert('Please select a pair before saving as pending.'); return; }
+  if (pending.length >= 4 && !editingPendingId) { alert('Maximum 4 pending trades allowed. Please complete or clear an existing one first.'); return; }
+
+  const entry = parseFloat(document.getElementById('f-entry').value);
+  const sl    = parseFloat(document.getElementById('f-sl').value);
+  const tp    = parseFloat(document.getElementById('f-tp').value);
+  const notes = document.getElementById('f-notes').value;
+
+  const data = {
+    id:        editingPendingId || Date.now(),
+    pair:      pair || '—',
+    notes,
+    entry:     isNaN(entry) ? null : entry,
+    sl:        isNaN(sl)    ? null : sl,
+    tp:        isNaN(tp)    ? null : tp,
+    trend:        sel.trend        || null,
+    direction:    sel.direction    || null,
+    ctx4h_trend:  sel.ctx4h_trend  || null,
+    ctx4h_phase:  sel.ctx4h_phase  || null,
+    ctx4h_pois:   sel.ctx4h_pois   || null,
+    crt:          sel.crt          || null,
+    structure:    sel.structure    || null,
+    poitype:      sel.poitype      || null,
+    poi:          sel.poi          || null,
+    refine:       sel.refine       || null,
+    engulf:       sel.engulf       || null,
+    sltype:       sel.sltype       || null,
+    partial:      sel.partial      || null,
+    outcome:      sel.outcome      || null,
+    fail:         sel.fail         || null,
+    savedAt:   new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'})
+  };
+
+  if (editingPendingId) {
+    pending = pending.map(p => p.id === editingPendingId ? data : p);
+  } else {
+    pending.push(data);
+  }
+
+  savePendingDB();
+  editingPendingId = null;
+  resetForm();
+  goTo('dashboard');
+}
+
+// ── LOAD PENDING INTO FORM ─────────────────
+function loadPendingIntoForm(id) {
+  const p = pending.find(x => x.id === id);
+  if (!p) return;
+  editingPendingId = id;
+  sel = {};
+
+  // Restore text inputs
+  document.getElementById('f-pair').value  = p.pair || '';
+  document.getElementById('f-notes').value = p.notes || '';
+  if (p.entry) document.getElementById('f-entry').value = p.entry;
+  if (p.sl)    document.getElementById('f-sl').value    = p.sl;
+  if (p.tp)    document.getElementById('f-tp').value    = p.tp;
+
+  // Restore toggles
+  const fields = ['trend','structure','poi','poitype','dist','refine','engulf','sltype','partial','outcome','fail'];
+  fields.forEach(g => {
+    if (p[g]) {
+      const el = document.querySelector(`.tog[data-g="${g}"][data-v="${p[g]}"]`);
+      if (el) { el.classList.add('s-' + el.dataset.c); sel[g] = p[g]; }
+    }
+  });
+
+  // Show fail section if needed
+  document.getElementById('fail-section').style.display = p.outcome === 'loss' ? 'block' : 'none';
+
+  // Banner
+  document.getElementById('editing-banner').style.display = 'flex';
+  document.getElementById('editing-banner-sub').textContent = p.pair + ' · ' + getNextStep(p);
+  document.getElementById('log-page-title').textContent = 'Continue Trade';
+  document.getElementById('log-page-sub').textContent   = 'Resume from where you left off';
+
+  updateStepDone();
+  updateGrade();
+}
+
+// ── CLEAR PENDING ──────────────────────────
+function clearPending(id) {
+  pending = pending.filter(p => p.id !== id);
+  savePendingDB();
+  if (editingPendingId === id) { editingPendingId = null; resetForm(); }
+  renderDash();
+}
+
+// ── SUBMIT FULL TRADE ──────────────────────
+function submitTrade() {
+  const pair = document.getElementById('f-pair').value;
+  if (!pair) { alert('Please select a pair.'); return; }
+  const needed = ['ctx4h_trend','ctx4h_phase','ctx4h_pois','crt','structure','poitype','poi','refine','engulf','sltype','outcome'];
+  if (needed.some(k => !sel[k])) { alert('Please complete all steps before saving the trade.'); return; }
+  const entry = parseFloat(document.getElementById('f-entry').value);
+  const sl    = parseFloat(document.getElementById('f-sl').value);
+  const tp    = parseFloat(document.getElementById('f-tp').value);
+  if (isNaN(entry)||isNaN(sl)||isNaN(tp)) { alert('Please enter Entry, SL and TP prices.'); return; }
+  if (sel.outcome === 'loss' && !sel.fail) { alert('Please select what failed.'); return; }
+
+  const risk   = Math.abs(entry - sl);
+  const reward = Math.abs(tp - entry);
+  const rr     = risk > 0 ? +(reward / risk).toFixed(2) : 0;
+  let r;
+  if (sel.outcome === 'win') {
+    // Full win — record full RR
+    r = rr;
+  } else if (sel.partial === 'yes') {
+    // Partial taken → SL moved to BE → minimum +1R regardless of outcome
+    // win=fullRR already handled above, partial/loss after partial = +1R
+    r = 1;
+  } else if (sel.outcome === 'partial') {
+    // BE with no partial taken = 0R
+    r = 0;
+  } else {
+    // Full loss, no partial = -1R
+    r = -1;
+  }
+
+  trades.push({
+    id: Date.now(),
+    pair:      document.getElementById('f-pair').value || '—',
+    notes:     document.getElementById('f-notes').value,
+    entry, sl, tp, rr, r,
+    grade:       calcGrade(sel),
+    trend:       sel.trend,
+    direction:   sel.direction   || null,
+    ctx4h_trend: sel.ctx4h_trend, ctx4h_phase: sel.ctx4h_phase, ctx4h_pois: sel.ctx4h_pois,
+    crt:         sel.crt,
+    structure:   sel.structure,   poitype:     sel.poitype,
+    poi:         sel.poi,         refine:      sel.refine,
+    engulf:      sel.engulf,      sltype:      sel.sltype,
+    partial:     sel.partial,     outcome:     sel.outcome,
+    fail:        sel.fail || null,
+    date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})
+  });
+
+  // Remove from pending if it was one
+  if (editingPendingId) {
+    pending = pending.filter(p => p.id !== editingPendingId);
+    savePendingDB();
+    editingPendingId = null;
+  }
+
+  saveTrades();
+  resetForm();
+  goTo('dashboard');
+}
+
+function resetForm() {
+  sel = {};
+  document.querySelectorAll('.tog').forEach(t => t.className = 'tog');
+  document.getElementById('fail-section').style.display = 'none';
+  ['f-pair','f-entry','f-sl','f-tp','f-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-pair').selectedIndex = 0;
+  document.getElementById('editing-banner').style.display = 'none';
+  document.getElementById('log-page-title').textContent = 'Log Trade';
+  document.getElementById('log-page-sub').textContent   = 'Follow your strategy checklist';
+  ['step1-done','step2-done','step3-done','step4-done','step5-done','step6-done','step7-done','step8-done','step9-done'].forEach(id => document.getElementById(id).style.display = 'none');
+  updateGrade();
+}
+
+// ── DASHBOARD ──────────────────────────────
+function renderDash() {
+  document.getElementById('dash-date').textContent =
+    new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+
+  // Split pending into: truly pending vs running
+  const pendingOnly  = pending.filter(p => !isRunning(p));
+  const runningTrades = pending.filter(p => isRunning(p));
+
+  // ── Pending section ──
+  const ps = document.getElementById('pending-section');
+  if (pendingOnly.length > 0) {
+    ps.style.display = 'block';
+    document.getElementById('pending-count').textContent = pendingOnly.length + '/4';
+    document.getElementById('pending-list').innerHTML = pendingOnly.map(p => {
+      const dirClass = p.direction === 'buy' ? 'pd-long' : p.direction === 'sell' ? 'pd-short' : 'pd-unknown';
+      const dirText  = p.direction === 'buy' ? '↑' : p.direction === 'sell' ? '↓' : '?';
+      return `
+        <div class="pending-card" onclick="goTo('log', ${p.id})">
+          <div class="pending-dir ${dirClass}">${dirText}</div>
+          <div class="pending-info">
+            <div class="pending-pair">${p.pair || '—'} <span style="font-size:10px;font-weight:400;color:var(--text3)">${p.savedAt || ''}</span></div>
+            <div class="pending-next">${getNextStep(p)}</div>
+            <div class="pending-steps">${getStepsCount(p)}</div>
+          </div>
+          <button class="pending-clear" onclick="event.stopPropagation();clearPending(${p.id})">✕ Clear</button>
+        </div>`;
+    }).join('');
+  } else {
+    ps.style.display = 'none';
+  }
+
+  // ── Running section ──
+  const rs = document.getElementById('running-section');
+  if (runningTrades.length > 0) {
+    rs.style.display = 'block';
+    document.getElementById('running-count').textContent = runningTrades.length;
+    document.getElementById('running-list').innerHTML = runningTrades.map(p => {
+      const dirClass = p.direction === 'buy'  ? 'rd-buy'  :
+                       p.direction === 'sell' ? 'rd-sell' : 'rd-unknown';
+      const dirText  = p.direction === 'buy'  ? '↑ Buy'  :
+                       p.direction === 'sell' ? '↓ Sell' : '?';
+      const rr       = p.entry && p.sl && p.tp ? calcRR(p.entry, p.sl, p.tp) : '—';
+      const partialTag = p.partial === 'yes'
+        ? `<span class="running-partial-tag">Partial Taken</span>` : '';
+      return `
+        <div class="running-card" onclick="goTo('log', ${p.id})">
+          <div class="running-card-top">
+            <div class="running-dir ${dirClass}">${p.direction === 'buy' ? '↑' : p.direction === 'sell' ? '↓' : '?'}</div>
+            <div class="running-pair">${p.pair || '—'}</div>
+            ${partialTag}
+            <span class="running-time">${p.savedAt || ''}</span>
+          </div>
+          <div class="running-prices">
+            <div class="rp-item"><div class="rp-lbl">ENTRY</div><div class="rp-val">${fmt(p.entry, p.pair)}</div></div>
+            <div class="rp-item"><div class="rp-lbl">STOP LOSS</div><div class="rp-val">${fmt(p.sl, p.pair)}</div></div>
+            <div class="rp-item"><div class="rp-lbl">TAKE PROFIT</div><div class="rp-val">${fmt(p.tp, p.pair)}</div></div>
+          </div>
+          <div class="running-rr">R:R <span>${rr}:1</span> · SL at ${p.sltype || '—'}</div>
+          <div class="running-actions">
+            <button class="running-btn rb-result" onclick="event.stopPropagation();goTo('log', ${p.id})">📝 Add Result</button>
+            <button class="running-btn rb-clear"  onclick="event.stopPropagation();clearPending(${p.id})">✕ Cancel Trade</button>
+          </div>
+        </div>`;
+    }).join('');
+  } else {
+    rs.style.display = 'none';
+  }
+
+  // Stats
+  const n = trades.length;
+  if (!n) {
+    ['d-wr','d-pf','d-rr','d-exp'].forEach(id => document.getElementById(id).textContent = '—');
+    document.getElementById('d-wl').textContent    = '0W · 0L';
+    document.getElementById('d-total').textContent = '0';
+    document.getElementById('d-netr').textContent  = '0R';
+    document.getElementById('d-dd').textContent    = '0R';
+    ['ga-wr','gb-wr','gc-wr'].forEach(id => document.getElementById(id).textContent = '—');
+    ['ga-sub','gb-sub','gc-sub'].forEach(id => document.getElementById(id).textContent = '0 trades');
+    drawEquity([]); return;
+  }
+
+  const wins    = trades.filter(t => t.outcome === 'win').length;
+  const losses  = trades.filter(t => t.outcome === 'loss').length;
+  const partial = trades.filter(t => t.outcome === 'partial').length;
+  const wr      = ((wins + partial) / n * 100).toFixed(1);
+  const grossW  = trades.filter(t => t.outcome !== 'loss').reduce((s,t) => s + t.r, 0);
+  const pf      = losses > 0 ? (grossW / losses).toFixed(2) : grossW > 0 ? '∞' : '—';
+  const wt      = trades.filter(t => t.outcome !== 'loss');
+  const avgRR   = wt.length > 0 ? (wt.reduce((s,t) => s + t.rr, 0) / wt.length).toFixed(2) : 0;
+  const netR    = +trades.reduce((s,t) => s + t.r, 0).toFixed(2);
+  const exp     = +((+wr/100 * +avgRR) - ((1 - +wr/100) * 1)).toFixed(2);
+  let peak=0,eq=0,maxDD=0;
+  trades.forEach(t => { eq+=t.r; if(eq>peak)peak=eq; if(peak-eq>maxDD)maxDD=peak-eq; });
+
+  document.getElementById('d-wr').textContent    = wr + '%';
+  document.getElementById('d-wl').textContent    = wins + 'W · ' + losses + 'L' + (partial ? ' · ' + partial + 'P' : '');
+  document.getElementById('d-pf').textContent    = pf;
+  document.getElementById('d-rr').textContent    = avgRR + ':1';
+  document.getElementById('d-exp').textContent   = (exp >= 0 ? '+' : '') + exp + 'R';
+  document.getElementById('d-exp').style.color   = exp >= 0 ? 'var(--sky)' : 'var(--red)';
+  document.getElementById('d-total').textContent = n;
+  document.getElementById('d-netr').textContent  = (netR >= 0 ? '+' : '') + netR + 'R';
+  document.getElementById('d-netr').style.color  = netR >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('d-dd').textContent    = '-' + maxDD.toFixed(2) + 'R';
+
+  ['A','B','C'].forEach(g => {
+    const gt  = trades.filter(t => t.grade === g);
+    const gw  = gt.filter(t => t.outcome !== 'loss').length;
+    const gwr = gt.length > 0 ? (gw / gt.length * 100).toFixed(0) + '%' : '—';
+    document.getElementById('g' + g.toLowerCase() + '-sub').textContent = gt.length + ' trade' + (gt.length !== 1 ? 's' : '');
+    document.getElementById('g' + g.toLowerCase() + '-wr').textContent  = gwr;
+  });
+
+  drawEquity(trades.map(t => t.r));
+}
+
+// ── EQUITY CURVE ───────────────────────────
+function drawEquity(rArr) {
+  const canvas = document.getElementById('equityCanvas');
+  const ctx    = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 300, H = 100;
+  canvas.width  = W * devicePixelRatio;
+  canvas.height = H * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  ctx.clearRect(0, 0, W, H);
+  if (rArr.length < 2) {
+    ctx.fillStyle = '#8FAABB'; ctx.font = '12px DM Sans'; ctx.textAlign = 'center';
+    ctx.fillText('Log trades to see equity curve', W/2, H/2 + 4); return;
+  }
+  let eq = 0;
+  const pts = [0, ...rArr.map(r => { eq += r; return +eq.toFixed(2); })];
+  const minV = Math.min(...pts), maxV = Math.max(...pts), range = maxV - minV || 1;
+  const pad = 12;
+  const px = i => pad + (i / (pts.length - 1)) * (W - pad * 2);
+  const py = v => pad + (1 - (v - minV) / range) * (H - pad * 2);
+  ctx.strokeStyle = '#D6E4EE'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(pad, py(0)); ctx.lineTo(W - pad, py(0)); ctx.stroke();
+  ctx.setLineDash([]);
+  const fin = pts[pts.length - 1];
+  const lc  = fin >= 0 ? '#2E7D5E' : '#C0392B';
+  const gr  = ctx.createLinearGradient(0, pad, 0, H);
+  gr.addColorStop(0, fin >= 0 ? 'rgba(46,125,94,0.12)' : 'rgba(192,57,43,0.12)');
+  gr.addColorStop(1, 'rgba(245,239,235,0)');
+  ctx.beginPath(); ctx.moveTo(px(0), py(pts[0]));
+  pts.forEach((v,i) => { if(i>0) ctx.lineTo(px(i), py(v)); });
+  ctx.lineTo(px(pts.length-1), H); ctx.lineTo(px(0), H);
+  ctx.closePath(); ctx.fillStyle = gr; ctx.fill();
+  ctx.beginPath(); ctx.strokeStyle = lc; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+  ctx.moveTo(px(0), py(pts[0]));
+  pts.forEach((v,i) => { if(i>0) ctx.lineTo(px(i), py(v)); });
+  ctx.stroke();
+  rArr.forEach((r,i) => {
+    ctx.beginPath(); ctx.arc(px(i+1), py(pts[i+1]), 3, 0, Math.PI*2);
+    ctx.fillStyle = r >= 0 ? '#2E7D5E' : '#C0392B'; ctx.fill();
+  });
+}
+
+// ── HISTORY ────────────────────────────────
+function setFilter(f) {
+  curFilter = f;
+  curPage   = 1;
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.f === f));
+  renderHistory();
+}
+function changePage(dir) {
+  curPage += dir;
+  renderHistory();
+  // Scroll history page to top of trade list
+  document.getElementById('trade-list').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderHistory() {
+  // Failure analysis always uses ALL trades regardless of filter/page
+  renderFailAnalysis();
+
+  // Apply filter
+  const filtered = [...trades].reverse().filter(t => {
+    if (curFilter === 'all')     return true;
+    if (curFilter === 'win')     return t.outcome === 'win';
+    if (curFilter === 'loss')    return t.outcome === 'loss';
+    if (curFilter === 'partial') return t.outcome === 'partial';
+    return t.grade === curFilter;
+  });
+
+  const el       = document.getElementById('trade-list');
+  const total    = filtered.length;
+  const totalPgs = Math.max(1, Math.ceil(total / PER_PAGE));
+
+  // Clamp page
+  if (curPage < 1)        curPage = 1;
+  if (curPage > totalPgs) curPage = totalPgs;
+
+  if (!total) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No trades found</div></div>';
+    return;
+  }
+
+  // Slice current page
+  const start  = (curPage - 1) * PER_PAGE;
+  const paged  = filtered.slice(start, start + PER_PAGE);
+
+  // Render trade cards
+  const cards = paged.map(t => `
+    <div class="trade-card">
+      <div class="tc-top">
+        <div class="tc-left">
+          <div class="tc-dir ${t.trend==='up'?'d-long':'d-short'}">${t.trend==='up'?'↑':'↓'}</div>
+          <div><div class="tc-pair">${t.pair}</div><div class="tc-date">${t.date}</div></div>
+        </div>
+        <div class="tc-right">
+          <span class="pill ${t.outcome==='win'?'p-win':t.outcome==='partial'?'p-partial':'p-loss'}">${t.outcome==='win'?'Win':t.outcome==='partial'?'Partial':'Loss'}</span>
+          <button class="tc-del" onclick="deleteTrade(${t.id})">✕</button>
+        </div>
+      </div>
+      <div class="tc-mid">
+        <div><div class="tc-stat-lbl">R:R</div><div class="tc-stat-val">${t.rr}:1</div></div>
+        <div><div class="tc-stat-lbl">Result</div><div class="tc-stat-val" style="color:${t.r>=0?'var(--green)':'var(--red)'}">${t.r>=0?'+':''}${t.r}R</div></div>
+        <div><div class="tc-stat-lbl">SL Type</div><div class="tc-stat-val">${t.sltype}</div></div>
+      </div>
+      <div class="tc-bot">
+        <span class="tag t-g${t.grade}">Grade ${t.grade}</span>
+        <span class="tag t-${t.poitype}">${t.poitype}</span>
+        ${t.crt ? `<span class="tag" style="background:var(--sky-lt);color:var(--navy)">${t.crt==='pivot'?'Pivot':t.crt==='continuation'?'Continuation':'Mid Leg'}</span>` : ''}
+        ${t.fail ? `<span class="tag t-fail">${t.fail}</span>` : ''}
+        ${t.notes ? `<span class="tc-notes">${t.notes}</span>` : ''}
+      </div>
+    </div>`).join('');
+
+  // Pagination controls — only show if more than 1 page
+  const pagination = totalPgs > 1 ? `
+    <div class="pagination">
+      <button class="pg-btn" onclick="changePage(-1)" ${curPage<=1?'disabled':''}>← Previous</button>
+      <div class="pg-info">Page ${curPage} of ${totalPgs}<br><span style="font-size:10px;color:var(--text3)">${total} trade${total!==1?'s':''} total</span></div>
+      <button class="pg-btn" onclick="changePage(1)"  ${curPage>=totalPgs?'disabled':''}>Next →</button>
+    </div>` : '';
+
+  el.innerHTML = cards + pagination;
+}
+
+function renderFailAnalysis() {
+  const losses = trades.filter(t => t.outcome === 'loss' && t.fail);
+  const el = document.getElementById('fail-analysis');
+  if (!losses.length) { el.innerHTML = '<div style="text-align:center;padding:12px;font-size:13px;color:var(--text3)">No failure data yet</div>'; return; }
+  const counts = {};
+  losses.forEach(t => { counts[t.fail] = (counts[t.fail] || 0) + 1; });
+  const max = Math.max(...Object.values(counts));
+  el.innerHTML = Object.entries(counts).sort((a,b) => b[1]-a[1]).map(([name,count]) => `
+    <div class="fail-row">
+      <div class="fail-name">${name}</div>
+      <div class="fail-bar-bg"><div class="fail-bar" style="width:${count/max*100}%"></div></div>
+      <div class="fail-count">${count}×</div>
+    </div>`).join('');
+}
+
+function deleteTrade(id) {
+  trades = trades.filter(t => t.id !== id);
+  saveTrades();
+  renderHistory();
+}
+
+function clearAll() {
+  if (!trades.length) return;
+  if (confirm('Delete all completed trades? Pending trades will not be affected.')) {
+    trades = [];
+    saveTrades();
+    renderHistory();
+  }
+}
+
+// ── PDF EXPORT ─────────────────────────────
+function exportPDF() {
+  if (!trades.length) { alert('No trades to export.'); return; }
+  const n       = trades.length;
+  const wins    = trades.filter(t => t.outcome === 'win').length;
+  const losses  = trades.filter(t => t.outcome === 'loss').length;
+  const partial = trades.filter(t => t.outcome === 'partial').length;
+  const wr      = ((wins + partial) / n * 100).toFixed(1);
+  const grossW  = trades.filter(t => t.outcome !== 'loss').reduce((s,t) => s + t.r, 0);
+  const pf      = losses > 0 ? (grossW / losses).toFixed(2) : grossW > 0 ? '∞' : '—';
+  const wt      = trades.filter(t => t.outcome !== 'loss');
+  const avgRR   = wt.length > 0 ? (wt.reduce((s,t) => s + t.rr, 0) / wt.length).toFixed(2) : '0';
+  const netR    = trades.reduce((s,t) => s + t.r, 0).toFixed(2);
+  const exp     = ((+wr / 100 * +avgRR) - ((1 - +wr / 100) * 1)).toFixed(2);
+  const failCounts = {};
+  trades.filter(t => t.outcome === 'loss' && t.fail).forEach(t => { failCounts[t.fail] = (failCounts[t.fail] || 0) + 1; });
+  const failRows   = Object.entries(failCounts).sort((a,b) => b[1]-a[1]).map(([k,v]) =>
+    `<tr><td style="padding:7px 10px;border-bottom:1px solid #eee">${k}</td><td style="padding:7px 10px;border-bottom:1px solid #eee;color:#C0392B;font-weight:600;text-align:right">${v}×</td></tr>`).join('');
+  const tradeRows  = [...trades].reverse().map((t,i) =>
+    `<tr style="background:${i%2===0?'#fff':'#F9F9F7'}">
+      <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:12px">${t.date}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #eee;font-weight:700">${t.pair}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #eee;color:${t.trend==='up'?'#2E7D5E':'#C0392B'};font-weight:600">${t.trend==='up'?'↑ Long':'↓ Short'}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #eee;color:${t.outcome==='win'?'#2E7D5E':t.outcome==='partial'?'#B8860B':'#C0392B'};font-weight:600">${t.outcome==='win'?'Win':t.outcome==='partial'?'Partial':'Loss'}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #eee;font-weight:700;color:${t.grade==='A'?'#2E7D5E':t.grade==='B'?'#B8860B':'#C0392B'}">${t.grade}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #eee;font-family:monospace">${t.rr}:1</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #eee;font-family:monospace;color:${t.r>=0?'#2E7D5E':'#C0392B'};font-weight:600">${t.r>=0?'+':''}${t.r}R</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:11px;color:#8FAABB">${t.fail||'—'}</td>
+    </tr>`).join('');
+  const gradeSection = ['A','B','C'].map(g => {
+    const gt=trades.filter(t=>t.grade===g), gw=gt.filter(t=>t.outcome!=='loss').length;
+    const gwr=gt.length>0?(gw/gt.length*100).toFixed(0)+'%':'—';
+    const cols={A:'#2E7D5E',B:'#B8860B',C:'#C0392B'}, bgs={A:'#E8F5EE',B:'#FEF9E7',C:'#FDECEA'}, name={A:'High Quality',B:'Acceptable',C:'Poor Quality'};
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #eee;background:#fff">
+      <div style="width:28px;height:28px;border-radius:8px;background:${bgs[g]};color:${cols[g]};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">${g}</div>
+      <div style="flex:1;font-size:13px;font-weight:600;color:#2F4156">${name[g]}</div>
+      <div style="font-size:12px;color:#8FAABB">${gt.length} trade${gt.length!==1?'s':''}</div>
+      <div style="font-family:monospace;font-size:15px;font-weight:700;color:${cols[g]};margin-left:14px">${gwr}</div>
+    </div>`;
+  }).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>TradeLog Export</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>body{font-family:'DM Sans',sans-serif;color:#2F4156;margin:0;padding:28px;background:#F5EFEB}.header{background:#2F4156;color:#EEF4F8;padding:22px 24px;border-radius:12px;margin-bottom:22px}.header h1{font-size:20px;margin:0 0 4px;color:#EEF4F8}.header p{margin:0;font-size:12px;color:#A8C4D4}h2{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#567C8D;margin:20px 0 10px;border-bottom:2px solid #C8D9E6;padding-bottom:6px}.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px}.stat{background:#fff;border:1px solid #D6E4EE;padding:14px;border-radius:10px}.stat-label{font-size:9px;font-weight:600;color:#567C8D;letter-spacing:1px;margin-bottom:5px;text-transform:uppercase}.stat-val{font-size:22px;font-weight:700;color:#2F4156;font-family:'DM Mono',monospace}table{width:100%;border-collapse:collapse;border-radius:10px;overflow:hidden;border:1px solid #D6E4EE;margin-bottom:8px}thead{background:#2F4156}thead th{padding:9px 8px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.5px;color:#C8D9E6}.grade-wrap{border:1px solid #D6E4EE;border-radius:10px;overflow:hidden}@media print{body{padding:14px;background:#fff}.header,thead{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head><body>
+  <div class="header"><h1>TradeLog — Strategy Performance Report</h1><p>Exported ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})} · ${n} total trades · ${wins}W · ${losses}L · ${partial}P</p></div>
+  <h2>Performance Summary</h2>
+  <div class="stats-grid">
+    <div class="stat"><div class="stat-label">Win Rate</div><div class="stat-val" style="color:#2E7D5E">${wr}%</div></div>
+    <div class="stat"><div class="stat-label">Profit Factor</div><div class="stat-val">${pf}</div></div>
+    <div class="stat"><div class="stat-label">Avg R:R</div><div class="stat-val">${avgRR}:1</div></div>
+    <div class="stat"><div class="stat-label">Expectancy</div><div class="stat-val" style="color:${+exp>=0?'#2E7D5E':'#C0392B'}">${+exp>=0?'+':''}${exp}R</div></div>
+    <div class="stat"><div class="stat-label">Net R</div><div class="stat-val" style="color:${+netR>=0?'#2E7D5E':'#C0392B'}">${+netR>=0?'+':''}${netR}R</div></div>
+    <div class="stat"><div class="stat-label">Total Trades</div><div class="stat-val">${n}</div></div>
+  </div>
+  <h2>Grade Breakdown</h2><div class="grade-wrap">${gradeSection}</div>
+  ${Object.keys(failCounts).length?`<h2>Failure Analysis</h2><table><thead><tr><th>Failure Reason</th><th style="text-align:right">Count</th></tr></thead><tbody>${failRows}</tbody></table>`:''}
+  <h2>Trade History (${n} trades)</h2>
+  <table><thead><tr><th>Date</th><th>Pair</th><th>Direction</th><th>Outcome</th><th>Grade</th><th>R:R</th><th>Result</th><th>Failure</th></tr></thead><tbody>${tradeRows}</tbody></table>
+  </body></html>`;
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => w.print(), 800);
+}
+
+// ── INIT ───────────────────────────────────
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
+window.addEventListener('resize', () => {
+  if (document.getElementById('page-dashboard').classList.contains('active')) drawEquity(trades.map(t => t.r));
+});
+
+
+// ── EXPOSE FUNCTIONS TO GLOBAL SCOPE ───────
+// Required because script is type="module"
+window.goTo          = goTo;
+window.savePending   = savePending;
+window.submitTrade   = submitTrade;
+window.clearPending  = clearPending;
+window.deleteTrade   = deleteTrade;
+window.clearAll      = clearAll;
+window.setFilter     = setFilter;
+window.exportPDF     = exportPDF;
+window.changePage    = changePage;
+
+// ── GOOGLE AUTH HANDLER ────────────────────
+const provider = new GoogleAuthProvider();
+
+window.handleGoogleAuth = async function() {
+  const user = auth.currentUser;
+  if (user && !user.isAnonymous) {
+    alert('Signed in as ' + user.email + '\nYour data syncs across all devices automatically.');
+    return;
+  }
+  try {
+    if (user && user.isAnonymous) {
+      // Try to link anonymous to Google
+      await linkWithPopup(user, provider);
+    } else {
+      await signInWithPopup(auth, provider);
+    }
+  } catch(e) {
+    if (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use') {
+      // Google account already exists — just sign in with it directly
+      // This merges the session into the existing Google account
+      try {
+        await signInWithPopup(auth, provider);
+      } catch(e2) {
+        if (e2.code !== 'auth/popup-closed-by-user') {
+          alert('Sign in failed: ' + e2.message);
+        }
+      }
+    } else if (e.code !== 'auth/popup-closed-by-user') {
+      alert('Sign in failed: ' + e.message);
+    }
+  }
+};
+
+function updateGoogleBtn(user) {
+  const btn  = document.getElementById('google-btn');
+  const text = document.getElementById('google-btn-text');
+  if (!btn) return;
+  if (user && !user.isAnonymous) {
+    text.textContent = user.displayName ? user.displayName.split(' ')[0] : 'Signed in';
+    btn.classList.add('signed-in');
+    btn.title = user.email;
+  } else {
+    text.textContent = 'Sign in';
+    btn.classList.remove('signed-in');
+  }
+}
+
+// ── FIREBASE AUTH + REALTIME SYNC ──────────
+onAuthStateChanged(auth, user => {
+  if (user) {
+    uid = user.uid;
+    updateGoogleBtn(user);
+    setSyncStatus('Syncing...', 'var(--teal)');
+
+    // Listen to trades in realtime
+    onValue(ref(db, uid + '/trades'), snap => {
+      trades = snap.val() ? Object.values(snap.val()) : [];
+      renderDash();
+      if (document.getElementById('page-history').classList.contains('active')) renderHistory();
+      setSyncStatus('Synced ✓', 'var(--green)');
+      setTimeout(() => setSyncStatus('', ''), 2000);
+    });
+
+    // Listen to pending in realtime
+    onValue(ref(db, uid + '/pending'), snap => {
+      pending = snap.val() ? Object.values(snap.val()) : [];
+      renderDash();
+    });
+
+  } else {
+    updateGoogleBtn(null);
+    // Sign in anonymously — silent, no UI needed
+    setSyncStatus('Connecting...', 'var(--text3)');
+    signInAnonymously(auth).catch(err => {
+      setSyncStatus('Offline', 'var(--gold)');
+      trades  = JSON.parse(localStorage.getItem('tl_trades')  || '[]');
+      pending = JSON.parse(localStorage.getItem('tl_pending') || '[]');
+      renderDash();
+    });
+  }
+});
+</script>
+</body>
+</html>
