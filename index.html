@@ -449,7 +449,7 @@ nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--
           <div class="tog" data-g="pullback4h" data-v="checked" data-c="teal" style="width:100%;text-align:center">✓ Checked</div>
         </div>
       </div>
-      <!-- Row 2: POI Type + Untested side by side -->
+      <!-- Row 2: POI Type -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:0">
         <div class="field-lbl" style="margin-bottom:0;white-space:nowrap">POI Type</div>
         <div style="display:flex;gap:8px;flex:1">
@@ -765,9 +765,7 @@ function calcGrade(s) {
   if (!s.ctx4h_trend) poor += 0.5;
   if (!s.ctx4h_phase) poor += 0.5;
   if (!s.ctx4h_pois)  poor += 0.5;
-  // 15M Context — POI freshness
-  // POI freshness — untested is best, not selecting it = slight penalty
-  if (s.poi !== 'untested') poor += 0.5;
+  
   // 5M Confirmation — engulf quality
   if (s.engulf === 'acceptable') poor += 0.5;
   if (s.engulf === 'poor')       poor++;
