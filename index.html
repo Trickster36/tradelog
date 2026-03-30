@@ -516,6 +516,7 @@ nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--
     <div class="step-body">
       <label class="field-lbl">Risk : Reward</label>
       <input class="t-input" id="f-rr" type="number" placeholder="e.g. 2.5" step="0.1" min="0" style="max-width:180px">
+
       <label class="field-lbl">Direction</label>
       <div class="tog-group">
         <div class="tog" data-g="direction" data-v="buy"  data-c="green">↑ Buy</div>
@@ -527,6 +528,9 @@ nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--
           <div style="font-size:12px;color:var(--text2)">🕐 <span id="trade-time-text"></span></div>
           <button onclick="editTradeTime()" style="font-size:11px;font-weight:600;color:var(--teal);background:none;border:none;cursor:pointer;padding:0">Edit</button>
         </div>
+      </div>
+    </div>
+  </div> 
         <!-- Time picker (hidden by default) -->
         <div id="time-picker" style="display:none;margin-top:6px">
           <select class="t-select" id="f-trade-time" style="margin-bottom:0" onchange="applyManualTime()">
@@ -576,22 +580,19 @@ nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--
         <div class="tog" data-g="outcome" data-v="loss"   data-c="red">Loss ✗</div>
         <div class="tog" data-g="outcome" data-v="missed" data-c="gold">Missed</div>
       </div>
+
       <div id="fail-section" style="display:none">
         <label class="field-lbl">What Failed?</label>
-        <div class="tog-group" style="flex-wrap:wrap;gap:8px">
-          <div class="tog" data-g="fail" data-v="S/R Invalidated"    data-c="gold" style="flex:1 1 auto;min-width:0">S/R Invalidated</div>
-          <div class="tog" data-g="fail" data-v="S/D Invalidated"    data-c="red"  style="flex:1 1 auto;min-width:0">S/D Invalidated</div>
-          <div class="tog" data-g="fail" data-v="15M CHoCH"          data-c="red"  style="flex:1 1 auto;min-width:0">15M CHoCH</div>
-          <div class="tog" data-g="fail" data-v="Liquidity Grab"     data-c="gold" style="flex:1 1 auto;min-width:0">Liquidity Grab</div>
-          <div class="tog" data-g="fail" data-v="Confirmation Failed" data-c="red" style="flex:1 1 auto;min-width:0">Confirmation Failed</div>
-          <div class="tog" data-g="fail" data-v="News Spike"         data-c="red"  style="flex:1 1 auto;min-width:0">News Spike</div>
+        <div class="tog-group">
+          <div class="tog" data-g="fail" data-v="S/R Invalidated" data-c="gold">S/R Invalidated</div>
+          <div class="tog" data-g="fail" data-v="S/D Invalidated" data-c="red">S/D Invalidated</div>
         </div>
       </div>
-      <label class="field-lbl">Notes <span style="color:var(--text3);font-weight:400">(optional)</span></label>
-      <input class="t-input" id="f-notes" type="text" placeholder="Any observations...">
+
+      <label class="field-lbl">Notes</label>
+      <input class="t-input" id="f-notes" type="text">
     </div>
   </div>
-
   <!-- Save buttons -->
   <div class="save-row">
     <button class="save-pending-btn" onclick="savePending()">⏳ Save as Pending</button>
