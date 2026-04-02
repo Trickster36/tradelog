@@ -889,7 +889,7 @@ function getNextStep(p) {
   if (!p.pair || p.pair === '—')                       return 'Waiting: Instrument';
   if (!p.ctx4h_trend||!p.ctx4h_phase||!p.ctx4h_pois)  return 'Waiting: 4H Context';
   if (!p.structure||!p.poitype||!p.pullback4h)          return 'Waiting: 15M Context';
-  if (!p.signal||!p.retest)                            return 'Waiting: 5M Confirmation';
+  if (!p.signal||!p.retest)                            return 'Waiting: Confirmation';
   if (!p.direction||!p.rr)                             return 'Waiting: Trade Management';
   if (!p.outcome)                                      return 'Waiting: Trade Result';
   return 'Ready to finalise';
