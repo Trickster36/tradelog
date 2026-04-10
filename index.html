@@ -507,11 +507,11 @@ nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--
     </div>
   </div>
 
-  <!-- Step 5 — 3M Confirmation -->
+  <!-- Step 5 — LTF Confirmation -->
   <div class="step-card">
     <div class="step-head">
       <div class="step-num">5</div>
-      <div><div class="step-title">1M Confirmation</div><div class="step-subtitle">Structure signal · POI retest</div></div>
+      <div><div class="step-title">LTF Confirmation</div><div class="step-subtitle">Structure signal · POI retest</div></div>
       <div class="step-done" id="step5-done" style="display:none">✓ Done</div>
     </div>
     <div class="step-body">
@@ -1012,7 +1012,7 @@ function getNextStep(p) {
   const needsConfirm = p.ctx4h_phase && p.ctx4h_phase !== 'expansion';
   if (needsConfirm && !p.ctx4h_confirm)                 return 'Waiting: 15M Confirmation';
   if (!p.poitype || !p.pullback4h)                      return 'Waiting: 15M Context';
-  if (!p.signal || !p.retest)                           return 'Waiting: 1M Confirmation';
+  if (!p.signal || !p.retest)                           return 'Waiting: LTF Confirmation';
   if (!p.direction || !p.rr)                            return 'Waiting: Trade Management';
   if (!p.outcome)                                       return 'Waiting: Trade Result';
   return 'Ready to finalise';
